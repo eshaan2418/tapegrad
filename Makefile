@@ -32,7 +32,7 @@ demo:
 	$(PY) -m tapegrad.cli sample --weights runs/tapegrad_s0.npz --prompt "ROMEO:" --tokens 300
 
 smoke:
-	$(PY) scripts/train_shakespeare.py --impl tapegrad --steps 20 --eval-every 10 --seed 99
+	$(PY) scripts/train_shakespeare.py --impl tapegrad --steps 20 --eval-every 10 --seed 99 --out runs/smoke
 
 test:
 	$(PY) -m pytest -q

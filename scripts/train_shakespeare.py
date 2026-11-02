@@ -39,6 +39,7 @@ def main() -> None:
     ap.add_argument("--composite", action="store_true", help="unfused ops (tapegrad only)")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--eval-every", type=int, default=200)
+    ap.add_argument("--out", default="eval/results/train")
     a = ap.parse_args()
     train, val, chars = load()
     cfg = GPTConfig(vocab_size=len(chars), block_size=64, n_layer=4, n_head=4, n_embd=128,
@@ -114,7 +115,7 @@ def main() -> None:
     if a.impl == "tapegrad":
         Path("runs").mkdir(exist_ok=True)
         np.savez(f"runs/{name}.npz", **{k: v.data for k, v in tg.named_parameters()})
-    d = Path("eval/results/train")
+    d = Path(a.out)
     d.mkdir(parents=True, exist_ok=True)
     (d / f"{name}.json").write_text(json.dumps(out))
 

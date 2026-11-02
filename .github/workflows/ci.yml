@@ -24,4 +24,4 @@ jobs:
       - name: Gradient checks + PyTorch parity
         run: pytest -q
       - name: Smoke train (20 steps on Tiny Shakespeare)
-        run: python scripts/train_shakespeare.py --impl tapegrad --steps 20 --eval-every 10 --seed 99
+        run: python scripts/train_shakespeare.py --impl tapegrad --steps 20 --eval-every 10 --seed 99 --out runs/smoke
