@@ -30,7 +30,7 @@ class _Attn(nn.Module):
         hd = d // self.h
         q, k, v = self.qkv(x).reshape(b, t, 3, self.h, hd).permute(2, 0, 3, 1, 4)
         att = (q @ k.transpose(-1, -2)) / math.sqrt(hd)
-        att = att.masked_fill(self.mask[:t, :t], float("-inf")).softmax(-1)
+        att = att.masked_fill(self.mask[:t, :t], float("-inf")).softmax(-1)  # type: ignore[index]
         return self.proj((att @ v).transpose(1, 2).reshape(b, t, d))
 
 

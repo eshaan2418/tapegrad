@@ -492,7 +492,7 @@ class Sum(Function):
     @staticmethod
     def forward(ctx: Context, a: np.ndarray, axis: Any, keepdims: bool) -> np.ndarray:
         ctx.meta.update(shape=a.shape, axis=axis, keepdims=keepdims)
-        return np.asarray(a.sum(axis=axis, keepdims=keepdims))
+        return np.asarray(np.sum(a, axis=axis, keepdims=keepdims))  # type: ignore[call-overload]
 
     @staticmethod
     def backward(ctx: Context, g: np.ndarray) -> tuple[np.ndarray]:
