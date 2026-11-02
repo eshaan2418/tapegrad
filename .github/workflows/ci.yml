@@ -1,0 +1,27 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (CPU torch for the reference checks)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu || pip install torch
+          pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests scripts
+      - name: Type check
+        run: mypy
+      - name: Gradient checks + PyTorch parity
+        run: pytest -q
+      - name: Smoke train (20 steps on Tiny Shakespeare)
+        run: python scripts/train_shakespeare.py --impl tapegrad --steps 20 --eval-every 10 --seed 99
