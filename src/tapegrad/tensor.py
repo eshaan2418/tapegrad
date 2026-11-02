@@ -460,7 +460,7 @@ class Gelu(Function):
     @staticmethod
     def forward(ctx: Context, a: np.ndarray) -> np.ndarray:
         c = a.dtype.type(_GELU_C)
-        inner = c * (a + a.dtype.type(0.044715) * a ** 3)
+        inner = c * (a + a.dtype.type(0.044715) * (a * a * a))
         t = np.tanh(inner)
         ctx.save(a, t)
         return a.dtype.type(0.5) * a * (1 + t)
@@ -557,9 +557,26 @@ class GetItem(Function):
 
     @staticmethod
     def backward(ctx: Context, g: np.ndarray) -> tuple[np.ndarray]:
-        out = np.zeros(ctx.meta["shape"], dtype=ctx.meta["dtype"])
-        np.add.at(out, ctx.meta["idx"], g)
+        shape, idx = ctx.meta["shape"], ctx.meta["idx"]
+        out = np.zeros(shape, dtype=ctx.meta["dtype"])
+        if _is_basic(idx):  # ints / slices / None / Ellipsis: no repeated targets
+            out[idx] += g
+        elif isinstance(idx, np.ndarray) and idx.dtype.kind in "iu":
+            # integer lookup along axis 0 (embeddings): segment-sum instead of np.add.at
+            flat = idx.reshape(-1) % shape[0]  # -1 and n-1 are the same row
+            g2 = g.reshape(len(flat), -1)
+            order = np.argsort(flat, kind="stable")
+            uniq, starts = np.unique(flat[order], return_index=True)
+            out.reshape(shape[0], -1)[uniq] = np.add.reduceat(g2[order], starts, axis=0)
+        else:
+            np.add.at(out, idx, g)
         return (out,)
+
+
+def _is_basic(idx: Any) -> bool:
+    items = idx if isinstance(idx, tuple) else (idx,)
+    return all(isinstance(i, (int, np.integer, slice)) or i is None or i is Ellipsis
+               for i in items)
 
 
 class Concat(Function):

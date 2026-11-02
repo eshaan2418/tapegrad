@@ -116,8 +116,10 @@ def test_shape_ops():
     check(lambda x: x[1, :, ::2], lambda x: x[1, :, ::2], a)
     idx = np.array([0, 2, 2, 1, 0])  # repeated indices must accumulate
     check(lambda x: x[:, idx], lambda x: x[:, torch.tensor(idx)], a)
-    check(lambda x, y: concat([x, y], axis=1), lambda x, y: torch.cat([x, y], 1), a, arr((2, 5, 4)))
-    check(lambda x, y: stack([x, y], axis=0), lambda x, y: torch.stack([x, y], 0), a, arr((2, 3, 4)))
+    check(lambda x, y: concat([x, y], axis=1), lambda x, y: torch.cat([x, y], 1),
+          a, arr((2, 5, 4)))
+    check(lambda x, y: stack([x, y], axis=0), lambda x, y: torch.stack([x, y], 0),
+          a, arr((2, 3, 4)))
     mask = arr((2, 3, 4), 3) > 0
     check(lambda x: x.masked_fill(mask, 0.0), lambda x: x.masked_fill(torch.tensor(mask), 0.0), a)
     check(lambda x, y: where(mask, x, y), lambda x, y: torch.where(torch.tensor(mask), x, y),
@@ -130,7 +132,8 @@ def test_cross_entropy(fused):
     t = np.random.default_rng(2).integers(0, 7, (3, 5))
     ce = F.cross_entropy if fused else F.cross_entropy_composite
     check(lambda x: ce(x, t),
-          lambda x: torch.nn.functional.cross_entropy(x.reshape(-1, 7), torch.tensor(t).reshape(-1)),
+          lambda x: torch.nn.functional.cross_entropy(x.reshape(-1, 7),
+                                                      torch.tensor(t).reshape(-1)),
           logits)
 
 
@@ -197,3 +200,9 @@ def test_finite_differences_on_composite_function():
         wm[i] -= eps
         num[i] = (f(wp)[0].item() - f(wm)[0].item()) / (2 * eps)
     np.testing.assert_allclose(W.grad, num, rtol=1e-6, atol=1e-9)
+
+
+def test_embedding_style_index_negative_and_repeats():
+    a = arr((7, 3))
+    idx = np.array([[0, 6, 6], [-1, 2, 0]])  # repeats and a negative index
+    check(lambda x: x[idx], lambda x: x[torch.tensor(idx) % 7], a)
