@@ -1,0 +1,12 @@
+# Default rules plus an allowlist for values that are not secrets:
+# git commit hashes recorded in run metadata, and the published dataset checksum.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "run metadata commit hashes and dataset checksum"
+regexTarget = "line"
+regexes = [
+  '''"git_commit": "[0-9a-f]{40}(-dirty)?"''',
+  '''^SHA256 = "86c4e6aa9db7c042ec79f339dcb96d42b0075e16b8fc2e86bf0ca57e2dc565ed"$''',
+]
