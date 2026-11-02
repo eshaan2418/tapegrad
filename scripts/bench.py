@@ -19,6 +19,8 @@ from pathlib import Path
 
 import numpy as np
 
+REPEATS = 7
+
 
 def speed(impl: str, fused: bool, threads: int, steps: int = 30) -> float:
     code = f"""
@@ -86,13 +88,19 @@ def memory(fused: bool, free_tape: bool) -> dict:
 
 def main() -> None:
     res: dict = {"speed": [], "memory": []}
-    for threads in (1, 4):
-        for impl, fused in (("tapegrad", True), ("tapegrad", False), ("torch", True)):
-            sps = [speed(impl, fused, threads) for _ in range(3)]
-            row = {"impl": impl, "fused": fused, "threads": threads, "steps_per_s": sps,
-                   "mean": float(np.mean(sps))}
-            res["speed"].append(row)
-            print(json.dumps(row), flush=True)
+    # Variants are interleaved round-robin across repeats so slow drift in machine load
+    # affects all of them equally; the median is reported.
+    variants = [(impl, fused, th) for th in (1, 4)
+                for impl, fused in (("tapegrad", True), ("tapegrad", False), ("torch", True))]
+    samples: dict = {v: [] for v in variants}
+    for _ in range(REPEATS):
+        for v in variants:
+            samples[v].append(speed(*v, steps=60))
+    for (impl, fused, th), sps in samples.items():
+        row = {"impl": impl, "fused": fused, "threads": th, "steps_per_s": sps,
+               "mean": float(np.median(sps)), "stat": "median"}
+        res["speed"].append(row)
+        print(json.dumps(row), flush=True)
     for fused in (True, False):
         for free in (True, False):
             res["memory"].append(memory(fused, free))

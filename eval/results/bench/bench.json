@@ -1,0 +1,128 @@
+{
+  "speed": [
+    {
+      "impl": "tapegrad",
+      "fused": true,
+      "threads": 1,
+      "steps_per_s": [
+        12.98614736186792,
+        12.50921501224273,
+        10.550370942481809,
+        17.050725375162735,
+        17.14112099220963,
+        16.051267749153084,
+        16.815534160905955
+      ],
+      "mean": 16.051267749153084,
+      "stat": "median"
+    },
+    {
+      "impl": "tapegrad",
+      "fused": false,
+      "threads": 1,
+      "steps_per_s": [
+        10.752451477452496,
+        3.6920857506908105,
+        14.836001753558149,
+        12.960310049474312,
+        16.117740091377723,
+        12.184441268147598,
+        16.617712307842766
+      ],
+      "mean": 12.960310049474312,
+      "stat": "median"
+    },
+    {
+      "impl": "torch",
+      "fused": true,
+      "threads": 1,
+      "steps_per_s": [
+        18.081215395123156,
+        10.205268125277128,
+        20.912730912405987,
+        20.36916537588559,
+        12.05962035111158,
+        17.789514245015145,
+        21.42471593606775
+      ],
+      "mean": 18.081215395123156,
+      "stat": "median"
+    },
+    {
+      "impl": "tapegrad",
+      "fused": true,
+      "threads": 4,
+      "steps_per_s": [
+        9.57857458003338,
+        7.642699509852221,
+        13.91674775349739,
+        17.42352166147735,
+        7.842006955165582,
+        15.0754826287965,
+        18.271686731090746
+      ],
+      "mean": 13.91674775349739,
+      "stat": "median"
+    },
+    {
+      "impl": "tapegrad",
+      "fused": false,
+      "threads": 4,
+      "steps_per_s": [
+        13.687057333151468,
+        7.881174740326034,
+        15.08108439288548,
+        16.20883699411786,
+        14.206606461798595,
+        15.721380113101969,
+        17.152660702061976
+      ],
+      "mean": 15.08108439288548,
+      "stat": "median"
+    },
+    {
+      "impl": "torch",
+      "fused": true,
+      "threads": 4,
+      "steps_per_s": [
+        20.943829004544305,
+        20.025521693062704,
+        30.65149758107519,
+        27.299690879718725,
+        27.652337837607902,
+        21.613562948267038,
+        24.834436654427176
+      ],
+      "mean": 24.834436654427176,
+      "stat": "median"
+    }
+  ],
+  "memory": [
+    {
+      "fused": true,
+      "free_tape": true,
+      "tape_mb_after_forward": 173.22784423828125,
+      "peak_mb_forward_backward": 196.9833526611328
+    },
+    {
+      "fused": true,
+      "free_tape": false,
+      "tape_mb_after_forward": 173.20600509643555,
+      "peak_mb_forward_backward": 200.77406692504883
+    },
+    {
+      "fused": false,
+      "free_tape": true,
+      "tape_mb_after_forward": 216.89023971557617,
+      "peak_mb_forward_backward": 242.14411544799805
+    },
+    {
+      "fused": false,
+      "free_tape": false,
+      "tape_mb_after_forward": 216.88303756713867,
+      "peak_mb_forward_backward": 244.45524978637695
+    }
+  ],
+  "git_commit": "15fb3d56a37aa2e5a698ad254063fee5a79ea34d",
+  "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded"
+}

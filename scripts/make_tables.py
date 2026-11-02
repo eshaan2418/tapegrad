@@ -46,8 +46,8 @@ def main() -> None:
         # per-seed trajectory agreement vs torch
         out.append("\n### Trajectory agreement with PyTorch (same init, same batches, float32)\n")
         out.append("| seed | variant | max abs train-loss diff | step of max | "
-                   "final val diff |")
-        out.append("|---|---|---|---|---|")
+                   "steps bit-identical | final val diff |")
+        out.append("|---|---|---|---|---|---|")
         torch_by_seed = {r["seed"]: r for r in by[("torch", True)]}
         for k in (("tapegrad", True), ("tapegrad", False)):
             for r in sorted(by.get(k, []), key=lambda r: r["seed"]):
@@ -56,6 +56,7 @@ def main() -> None:
                     continue
                 d = np.abs(np.array(r["train_loss"]) - np.array(t["train_loss"]))
                 out.append(f"| {r['seed']} | {NAMES[k]} | {d.max():.2e} | {int(d.argmax()) + 1} | "
+                           f"{100 * float((d == 0).mean()):.1f}% | "
                            f"{abs(r['val_loss'][-1][1] - t['val_loss'][-1][1]):.2e} |")
                 r["_diff"] = d
         out.append("")
@@ -70,13 +71,16 @@ def main() -> None:
                              label=NAMES[k] if r["seed"] == 0 else None,
                              linestyle="--" if k[0] == "torch" else "-")
                 if "_diff" in r:
-                    axes[1].semilogy(np.maximum(r["_diff"], 1e-9), color=colors[k], alpha=0.6,
-                                     label=NAMES[k] if r["seed"] == 0 else None)
+                    d = r["_diff"]
+                    roll = np.array([d[max(0, i - 49) : i + 1].max() for i in range(len(d))])
+                    axes[1].plot(roll, color=colors[k], alpha=0.7,
+                                 label=NAMES[k] if r["seed"] == 0 else None)
         axes[0].set_xlabel("step")
         axes[0].set_ylabel("validation loss (nats/char)")
         axes[0].legend(frameon=False, fontsize=7)
         axes[1].set_xlabel("step")
-        axes[1].set_ylabel("|train loss − PyTorch| (log)")
+        axes[1].set_ylabel("|train loss − PyTorch|, 50-step max")
+        axes[1].ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
         axes[1].legend(frameon=False, fontsize=7)
         for ax in axes:
             ax.spines[["top", "right"]].set_visible(False)
@@ -86,12 +90,13 @@ def main() -> None:
     bp = RES / "bench" / "bench.json"
     if bp.exists():
         b = json.loads(bp.read_text())
-        out += ["## Speed (idle machine, batch 32 x 64 tokens, 3 repeats of 30 steps)\n",
-                "| implementation | BLAS threads | steps/s (mean of 3) | relative to PyTorch |",
-                "|---|---|---|---|"]
+        out += ["## Speed (batch 32 x 64 tokens; median of 7 interleaved repeats of 60 steps)\n",
+                "| implementation | BLAS threads | steps/s (median) | min-max | vs PyTorch |",
+                "|---|---|---|---|---|"]
         torch_sp = {r["threads"]: r["mean"] for r in b["speed"] if r["impl"] == "torch"}
         for r in b["speed"]:
             out.append(f"| {NAMES[(r['impl'], r['fused'])]} | {r['threads']} | {r['mean']:.1f} | "
+                       f"{min(r['steps_per_s']):.1f}-{max(r['steps_per_s']):.1f} | "
                        f"{r['mean'] / torch_sp[r['threads']]:.2f}x |")
         out += ["\n## Memory of one forward + backward (tracemalloc, tapegrad)\n",
                 "| ops | tape freed during backward | tape after forward MB | peak MB |",
